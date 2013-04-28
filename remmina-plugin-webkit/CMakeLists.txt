@@ -23,8 +23,11 @@ add_library(remmina-plugin-webkit ${REMMINA_PLUGIN_SRCS})
 set_target_properties(remmina-plugin-webkit PROPERTIES PREFIX "")
 include_directories(${GTK_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/remmina-plugins)
+
 install(TARGETS remmina-plugin-webkit DESTINATION ${REMMINA_PLUGINDIR})
+
 set(APPICON16_EMBLEMS_DIR "${REMMINA_DATADIR}/icons/hicolor/16x16/emblems")
-set(APPICON22_EMBLEMS_DIR "${REMMINA_DATADIR}/icons/hicolor/22x22/emblems")
 install(FILES 16x16/emblems/remmina-webkit.png DESTINATION ${APPICON16_EMBLEMS_DIR})
+
+set(APPICON22_EMBLEMS_DIR "${REMMINA_DATADIR}/icons/hicolor/22x22/emblems")
 install(FILES 22x22/emblems/remmina-webkit.png DESTINATION ${APPICON22_EMBLEMS_DIR})

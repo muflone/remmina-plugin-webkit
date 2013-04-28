@@ -1,6 +1,7 @@
-# Remmina Plugin WEBKIT - A Remmina plugin to open a GTK+ Webkit browser
+# Project name : Remmina Plugin WEBKIT
+# Remmina protocol plugin to launch a GTK+ Webkit browser.
 #
-# Copyright (C) 2013 Fabio Castelli <muflone@vbsimple.net>
+# Copyright (C) 2012-2013 Fabio Castelli <muflone@vbsimple.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,19 +14,15 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, 
-# Boston, MA 02111-1307, USA.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set(REMMINA_PLUGIN_WEBKIT_BROWSER_SRCS
+set(REMMINA_PLUGIN_SRCS
   src/remmina-gtkwebkit-browser.c
 )
-#pkg_check_modules(WEBKIT REQUIRED gtk+-3.0 webkitgtk-3.0)
 pkg_check_modules(WEBKIT REQUIRED gtk+-2.0 webkit-1.0)
-MESSAGE( STATUS "WEBKIT_INCLUDE_DIRS: " ${WEBKIT_INCLUDE_DIRS} )
-MESSAGE( STATUS "WEBKIT_LIBRARIES: " ${WEBKIT_LIBRARIES} )
-
+#pkg_check_modules(WEBKIT REQUIRED gtk+-3.0 webkitgtk-3.0)
 include_directories(${WEBKIT_INCLUDE_DIRS})
-add_executable(remmina-gtkwebkit-browser ${REMMINA_PLUGIN_WEBKIT_BROWSER_SRCS})
+
+add_executable(remmina-gtkwebkit-browser ${REMMINA_PLUGIN_SRCS})
 target_link_libraries(remmina-gtkwebkit-browser ${WEBKIT_LIBRARIES})
 install(TARGETS remmina-gtkwebkit-browser DESTINATION ${CMAKE_INSTALL_BINDIR})

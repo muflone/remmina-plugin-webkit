@@ -1,6 +1,7 @@
 /*
- * Remmina Plugin WEBKIT - A Remmina plugin to open a GTK+ Webkit browser
- * Copyright (C) 2013 Fabio Castelli <muflone@vbsimple.net>
+ * Project name : Remmina Plugin WEBKIT
+ * Remmina protocol plugin to launch a GTK+ Webkit browser.
+ * Copyright (C) 2012-2013 Fabio Castelli <muflone@vbsimple.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,25 +14,22 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, 
- * Boston, MA 02111-1307, USA.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include <gtk/gtk.h>
-#define GTK_VERSION 2
 
 /*
  * I was unable to make it work properly with GTK+3.0
  * In particular everything compiles and links properly but when remmina
- * launches the external process with -X and embed the plug inside its
+ * launches the external process with -X and embeds the plug inside its
  * socket, just only a grey area is shown.
  * The application though is properly launched and working, but
  * everything is of an un-redrawned grey.
  * Without using the GTK+ socket and plug the application works fine.
- * For this reason I'm compiling always with GTK+2.0 and Webkit 1.0 :(
+ * For this reason I'm always compiling with GTK+2.0 and Webkit 1.0 :-(
  * If someone could help it would be really appreciated...
  */
+#define GTK_VERSION 2
 #if GTK_VERSION == 3
   # include <gtk/gtkx.h>
 #endif
