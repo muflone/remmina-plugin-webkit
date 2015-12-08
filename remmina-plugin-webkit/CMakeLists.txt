@@ -22,8 +22,8 @@ set(REMMINA_PLUGIN_SRCS
 )
 add_library(remmina-plugin-webkit ${REMMINA_PLUGIN_SRCS})
 set_target_properties(remmina-plugin-webkit PROPERTIES PREFIX "")
-include_directories(${GTK_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/remmina-plugins)
+target_link_libraries(remmina-plugin-webkit ${REMMINA_COMMON_LIBRARIES})
 
 install(TARGETS remmina-plugin-webkit DESTINATION ${REMMINA_PLUGINDIR})
 
