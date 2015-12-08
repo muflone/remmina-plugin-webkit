@@ -24,6 +24,6 @@
 
   #define PLUGIN_NAME        "WEBKIT"
   #define PLUGIN_DESCRIPTION "WEBKIT - Launch a GTK+ Webkit browser"
-  #define PLUGIN_VERSION     "1.2.1.0"
+  #define PLUGIN_VERSION     "1.2.2.0"
   #define PLUGIN_APPICON     "remmina-webkit"
 #endif
