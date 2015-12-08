@@ -34,24 +34,24 @@ typedef struct _RemminaPluginData
 
 static RemminaPluginService *remmina_plugin_service = NULL;
 
-static void remmina_plugin_on_plug_added(GtkSocket *socket, RemminaProtocolWidget *gp)
+static void remmina_plugin_webkit_on_plug_added(GtkSocket *socket, RemminaProtocolWidget *gp)
 {
   RemminaPluginData *gpdata;
   gpdata = (RemminaPluginData*) g_object_get_data(G_OBJECT(gp), "plugin-data");
-  remmina_plugin_service->log_printf("[%s] remmina_plugin_on_plug_added socket %d\n", PLUGIN_NAME, gpdata->socket_id);
+  remmina_plugin_service->log_printf("[%s] remmina_plugin_webkit_on_plug_added socket %d\n", PLUGIN_NAME, gpdata->socket_id);
   remmina_plugin_service->protocol_plugin_emit_signal(gp, "connect");
   return;
 }
 
-static void remmina_plugin_on_plug_removed(GtkSocket *socket, RemminaProtocolWidget *gp)
+static void remmina_plugin_webkit_on_plug_removed(GtkSocket *socket, RemminaProtocolWidget *gp)
 {
-  remmina_plugin_service->log_printf("[%s] remmina_plugin_on_plug_removed\n", PLUGIN_NAME);
+  remmina_plugin_service->log_printf("[%s] remmina_plugin_webkit_on_plug_removed\n", PLUGIN_NAME);
   remmina_plugin_service->protocol_plugin_close_connection(gp);
 }
 
-static void remmina_plugin_init(RemminaProtocolWidget *gp)
+static void remmina_plugin_webkit_init(RemminaProtocolWidget *gp)
 {
-  remmina_plugin_service->log_printf("[%s] remmina_plugin_init\n", PLUGIN_NAME);
+  remmina_plugin_service->log_printf("[%s] remmina_plugin_webkit_init\n", PLUGIN_NAME);
   RemminaPluginData *gpdata;
 
   gpdata = g_new0(RemminaPluginData, 1);
@@ -60,14 +60,14 @@ static void remmina_plugin_init(RemminaProtocolWidget *gp)
   gpdata->socket = gtk_socket_new();
   remmina_plugin_service->protocol_plugin_register_hostkey(gp, gpdata->socket);
   gtk_widget_show(gpdata->socket);
-  g_signal_connect(G_OBJECT(gpdata->socket), "plug-added", G_CALLBACK(remmina_plugin_on_plug_added), gp);
-  g_signal_connect(G_OBJECT(gpdata->socket), "plug-removed", G_CALLBACK(remmina_plugin_on_plug_removed), gp);
+  g_signal_connect(G_OBJECT(gpdata->socket), "plug-added", G_CALLBACK(remmina_plugin_webkit_on_plug_added), gp);
+  g_signal_connect(G_OBJECT(gpdata->socket), "plug-removed", G_CALLBACK(remmina_plugin_webkit_on_plug_removed), gp);
   gtk_container_add(GTK_CONTAINER(gp), gpdata->socket);
 }
 
-static gboolean remmina_plugin_open_connection(RemminaProtocolWidget *gp)
+static gboolean remmina_plugin_webkit_open_connection(RemminaProtocolWidget *gp)
 {
-  remmina_plugin_service->log_printf("[%s] remmina_plugin_open_connection\n", PLUGIN_NAME);
+  remmina_plugin_service->log_printf("[%s] remmina_plugin_webkit_open_connection\n", PLUGIN_NAME);
   #define GET_PLUGIN_STRING(value) \
     g_strdup(remmina_plugin_service->file_get_string(remminafile, value))
   #define GET_PLUGIN_BOOLEAN(value) \
@@ -149,9 +149,9 @@ static gboolean remmina_plugin_open_connection(RemminaProtocolWidget *gp)
   }
 }
 
-static gboolean remmina_plugin_close_connection(RemminaProtocolWidget *gp)
+static gboolean remmina_plugin_webkit_close_connection(RemminaProtocolWidget *gp)
 {
-  remmina_plugin_service->log_printf("[%s] remmina_plugin_close_connection\n", PLUGIN_NAME);
+  remmina_plugin_service->log_printf("[%s] remmina_plugin_webkit_close_connection\n", PLUGIN_NAME);
   remmina_plugin_service->protocol_plugin_emit_signal(gp, "disconnect");
   return FALSE;
 }
@@ -165,7 +165,7 @@ static gboolean remmina_plugin_close_connection(RemminaProtocolWidget *gp)
  * e) Values for REMMINA_PROTOCOL_SETTING_TYPE_SELECT or REMMINA_PROTOCOL_SETTING_TYPE_COMBO
  * f) Unused pointer
  */
-static const RemminaProtocolSetting remmina_plugin_basic_settings[] =
+static const RemminaProtocolSetting remmina_plugin_webkit_basic_settings[] =
 {
   { REMMINA_PROTOCOL_SETTING_TYPE_SERVER, NULL, NULL, FALSE, NULL, NULL },
   { REMMINA_PROTOCOL_SETTING_TYPE_RESOLUTION, NULL, NULL, FALSE, NULL, NULL },
@@ -182,7 +182,7 @@ static const RemminaProtocolSetting remmina_plugin_basic_settings[] =
  * e) Values for REMMINA_PROTOCOL_SETTING_TYPE_SELECT or REMMINA_PROTOCOL_SETTING_TYPE_COMBO
  * f) Unused pointer
  */
-static const RemminaProtocolSetting remmina_plugin_advanced_settings[] =
+static const RemminaProtocolSetting remmina_plugin_webkit_advanced_settings[] =
 {
   { REMMINA_PROTOCOL_SETTING_TYPE_CHECK, "no status", N_("Disable status bar"), TRUE, NULL, NULL },
   { REMMINA_PROTOCOL_SETTING_TYPE_CHECK, "no toolbar", N_("Disable toolbar"), FALSE, NULL, NULL },
@@ -203,13 +203,13 @@ static RemminaProtocolPlugin remmina_plugin =
   PLUGIN_VERSION,                               // Version number
   PLUGIN_APPICON,                               // Icon for normal connection
   PLUGIN_APPICON,                               // Icon for SSH connection
-  remmina_plugin_basic_settings,                // Array for basic settings
-  remmina_plugin_advanced_settings,             // Array for advanced settings
+  remmina_plugin_webkit_basic_settings,         // Array for basic settings
+  remmina_plugin_webkit_advanced_settings,      // Array for advanced settings
   REMMINA_PROTOCOL_SSH_SETTING_NONE,            // SSH settings type
   NULL,                                         // Array for available features
-  remmina_plugin_init,                          // Plugin initialization
-  remmina_plugin_open_connection,               // Plugin open connection
-  remmina_plugin_close_connection,              // Plugin close connection
+  remmina_plugin_webkit_init,                   // Plugin initialization
+  remmina_plugin_webkit_open_connection,        // Plugin open connection
+  remmina_plugin_webkit_close_connection,       // Plugin close connection
   NULL,                                         // Query for available features
   NULL,                                         // Call a feature
   NULL                                          // Send a keystroke
