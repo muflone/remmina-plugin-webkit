@@ -9,7 +9,6 @@ addons:
     - cmake                                   # CMake
     - libgtk-3-dev                            # GTK+ 3
     - libwebkitgtk-3.0-dev                    # WebKit
-    - git                                     # Git
 install:
   - echo install
   - wget --output-document=remmina-plugin-builder.tar.gz
