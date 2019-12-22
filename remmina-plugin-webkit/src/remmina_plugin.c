@@ -23,7 +23,7 @@
 #include <remmina/remmina_plugin.h>
 #include <gtk/gtkx.h>
 
-typedef struct _RemminaPluginData
+typedef struct
 {
   GtkWidget *socket;
   gint socket_id;
@@ -34,29 +34,28 @@ static RemminaPluginService *remmina_plugin_service = NULL;
 
 static void remmina_plugin_webkit_on_plug_added(GtkSocket *socket, RemminaProtocolWidget *gp)
 {
-  TRACE_CALL("remmina_plugin_webkit_on_plug_added");
+  TRACE_CALL(__func__);
   RemminaPluginData *gpdata;
   gpdata = (RemminaPluginData*) g_object_get_data(G_OBJECT(gp), "plugin-data");
   remmina_plugin_service->log_printf("[%s] Plugin plug added on socket %d\n", PLUGIN_NAME, gpdata->socket_id);
-  remmina_plugin_service->protocol_plugin_emit_signal(gp, "connect");
+  remmina_plugin_service->protocol_plugin_signal_connection_opened(gp);
   return;
 }
 
 static void remmina_plugin_webkit_on_plug_removed(GtkSocket *socket, RemminaProtocolWidget *gp)
 {
-  TRACE_CALL("remmina_plugin_webkit_on_plug_removed");
+  TRACE_CALL(__func__);
   remmina_plugin_service->log_printf("[%s] Plugin plug removed\n", PLUGIN_NAME);
-  remmina_plugin_service->protocol_plugin_close_connection(gp);
+  remmina_plugin_service->protocol_plugin_signal_connection_closed(gp);
 }
 
 static void remmina_plugin_webkit_init(RemminaProtocolWidget *gp)
 {
-  TRACE_CALL("remmina_plugin_webkit_init");
-  remmina_plugin_service->log_printf("[%s] Plugin init\n", PLUGIN_NAME);
+  TRACE_CALL(__func__);
   RemminaPluginData *gpdata;
-
+  remmina_plugin_service->log_printf("[%s] Plugin init\n", PLUGIN_NAME);
+  /* Instance new GtkSocket */
   gpdata = g_new0(RemminaPluginData, 1);
-  g_object_set_data_full(G_OBJECT(gp), "plugin-data", gpdata, g_free);
 
   gpdata->socket = gtk_socket_new();
   remmina_plugin_service->protocol_plugin_register_hostkey(gp, gpdata->socket);
@@ -64,34 +63,52 @@ static void remmina_plugin_webkit_init(RemminaProtocolWidget *gp)
   g_signal_connect(G_OBJECT(gpdata->socket), "plug-added", G_CALLBACK(remmina_plugin_webkit_on_plug_added), gp);
   g_signal_connect(G_OBJECT(gpdata->socket), "plug-removed", G_CALLBACK(remmina_plugin_webkit_on_plug_removed), gp);
   gtk_container_add(GTK_CONTAINER(gp), gpdata->socket);
+  /* Save reference to plugin data */
+  g_object_set_data_full(G_OBJECT(gp), "plugin-data", gpdata, g_free);
 }
 
 static gboolean remmina_plugin_webkit_open_connection(RemminaProtocolWidget *gp)
 {
-  TRACE_CALL("remmina_plugin_webkit_open_connection");
-  remmina_plugin_service->log_printf("[%s] Plugin open connection\n", PLUGIN_NAME);
+  TRACE_CALL(__func__);
+  RemminaFile *remminafile;
+  gboolean ret;
+  GError *error = NULL;
+  gchar *argv[50];  // Contains all the arguments included the password
+  gchar *argv_debug[50]; // Contains all the arguments, excluding the password
+  gchar *command_line; // The whole command line obtained from argv_debug
+  gint argc;
+  gint i;
+  gchar *option_str;
+  gint width;
+  gint height;
+  RemminaPluginData *gpdata;
+
   #define GET_PLUGIN_STRING(value) \
     g_strdup(remmina_plugin_service->file_get_string(remminafile, value))
   #define GET_PLUGIN_BOOLEAN(value) \
     remmina_plugin_service->file_get_int(remminafile, value, FALSE)
   #define GET_PLUGIN_INT(value, default_value) \
     remmina_plugin_service->file_get_int(remminafile, value, default_value)
+  #define ADD_ARGUMENT(name, value) \
+    { \
+      argv[argc] = g_strdup(name); \
+      argv_debug[argc] = g_strdup(name); \
+      argc++; \
+      if (value != NULL) \
+      { \
+        argv[argc] = value; \
+        argv_debug[argc++] = g_strdup(g_strcmp0(name, "-p") != 0 ? value : "XXXXX"); \
+      } \
+    }
 
-  RemminaPluginData *gpdata;
-  RemminaFile *remminafile;
-  gboolean ret;
-  GError *error = NULL;
-  gchar *argv[50];
-  gint argc;
-  gint i;
-  gint width, height;
+  remmina_plugin_service->log_printf("[%s] Plugin open connection\n", PLUGIN_NAME);
+  remminafile = remmina_plugin_service->protocol_plugin_get_file(gp);
 
   gpdata = (RemminaPluginData*) g_object_get_data(G_OBJECT(gp), "plugin-data");
-  remminafile = remmina_plugin_service->protocol_plugin_get_file(gp);
 
   if (!GET_PLUGIN_BOOLEAN("detached"))
   {
-	width = GET_PLUGIN_INT("resolution_width", 1024);
+    width = GET_PLUGIN_INT("resolution_width", 1024);
     height = GET_PLUGIN_INT("resolution_height", 768);
     remmina_plugin_service->protocol_plugin_set_width(gp, width);
     remmina_plugin_service->protocol_plugin_set_height(gp, height);
@@ -100,46 +117,62 @@ static gboolean remmina_plugin_webkit_open_connection(RemminaProtocolWidget *gp)
   }
 
   argc = 0;
-  argv[argc++] = g_strdup("remmina-gtkwebkit-browser");
+  // Main executable name
+  ADD_ARGUMENT("remmina-gtkwebkit-browser", NULL);
+  // Toolbar hidden
   if (GET_PLUGIN_BOOLEAN("no toolbar"))
   {
-    argv[argc++] = g_strdup("-t");
+    ADD_ARGUMENT("-t", NULL);
   }
+  // Back button hidden
   if (GET_PLUGIN_BOOLEAN("no back"))
   {
-    argv[argc++] = g_strdup("-b");
+    ADD_ARGUMENT("-b", NULL);
   }
+  // Forward button hidden
   if (GET_PLUGIN_BOOLEAN("no forward"))
   {
-    argv[argc++] = g_strdup("-f");
+    ADD_ARGUMENT("-f", NULL);
   }
+  // URL entry hidden
   if (GET_PLUGIN_BOOLEAN("no url entry"))
   {
-    argv[argc++] = g_strdup("-u");
+    ADD_ARGUMENT("-u", NULL);
   }
+  // Go button hidden
   if (GET_PLUGIN_BOOLEAN("no go"))
   {
-    argv[argc++] = g_strdup("-g");
+    ADD_ARGUMENT("-g", NULL);
   }
+  // Status bar hidden
   if (GET_PLUGIN_BOOLEAN("no status"))
   {
-    argv[argc++] = g_strdup("-s");
+    ADD_ARGUMENT("-s", NULL);
   }
-
-  argv[argc++] = g_strdup("-X");
-  argv[argc++] = g_strdup_printf("%d", gpdata->socket_id);
-  argv[argc++] = GET_PLUGIN_STRING("server");
-  argv[argc++] = NULL;
-
-  ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH,
-    NULL, NULL, &gpdata->pid, &error);
-
+  // Socket to get the external window
+  ADD_ARGUMENT("-X", g_strdup_printf("%d", gpdata->socket_id));
+  // Server address
+  option_str = GET_PLUGIN_STRING("server");
+  ADD_ARGUMENT(option_str, option_str);
+  // End of the arguments list
+  ADD_ARGUMENT(NULL, NULL);
+  // Retrieve the whole command line
+  command_line = g_strjoinv(g_strdup(" "), (gchar **)&argv_debug[0]);
+  remmina_plugin_service->log_printf("[WEBKIT] starting %s\n", command_line);
+  g_free(command_line);
+  // Execute the external process rdesktop
+  ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, &gpdata->pid, &error);
+  remmina_plugin_service->log_printf("[WEBKIT] started remmina-gtkwebkit-browser with GPid %d\n", &gpdata->pid);
+  // Free the arguments list
   for (i = 0; i < argc; i++)
+  {
+    g_free(argv_debug[i]);
     g_free(argv[i]);
-
+  }
+  // Show error message
   if (!ret)
     remmina_plugin_service->protocol_plugin_set_error(gp, "%s", error->message);
-
+  // Show attached window socket ID
   if (!GET_PLUGIN_BOOLEAN("detached"))
   {
     remmina_plugin_service->log_printf("[%s] attached window to socket %d\n", PLUGIN_NAME, gpdata->socket_id);
@@ -153,9 +186,9 @@ static gboolean remmina_plugin_webkit_open_connection(RemminaProtocolWidget *gp)
 
 static gboolean remmina_plugin_webkit_close_connection(RemminaProtocolWidget *gp)
 {
-  TRACE_CALL("remmina_plugin_webkit_close_connection");
+  TRACE_CALL(__func__);
   remmina_plugin_service->log_printf("[%s] Plugin close connection\n", PLUGIN_NAME);
-  remmina_plugin_service->protocol_plugin_emit_signal(gp, "disconnect");
+  remmina_plugin_service->protocol_plugin_signal_connection_closed(gp);
   return FALSE;
 }
 
@@ -170,8 +203,8 @@ static gboolean remmina_plugin_webkit_close_connection(RemminaProtocolWidget *gp
  */
 static const RemminaProtocolSetting remmina_plugin_webkit_basic_settings[] =
 {
-  { REMMINA_PROTOCOL_SETTING_TYPE_SERVER, NULL, NULL, FALSE, NULL, NULL },
-  { REMMINA_PROTOCOL_SETTING_TYPE_RESOLUTION, NULL, NULL, FALSE, NULL, NULL },
+  { REMMINA_PROTOCOL_SETTING_TYPE_SERVER, "server", NULL, FALSE, NULL, NULL },
+  { REMMINA_PROTOCOL_SETTING_TYPE_RESOLUTION, "resolution", NULL, FALSE, NULL, NULL },
   { REMMINA_PROTOCOL_SETTING_TYPE_CHECK, "detached", N_("Detached window"), FALSE, NULL, NULL },
   { REMMINA_PROTOCOL_SETTING_TYPE_END, NULL, NULL, FALSE, NULL, NULL }
 };
@@ -183,7 +216,7 @@ static const RemminaProtocolSetting remmina_plugin_webkit_basic_settings[] =
  * c) Setting description
  * d) Compact disposition
  * e) Values for REMMINA_PROTOCOL_SETTING_TYPE_SELECT or REMMINA_PROTOCOL_SETTING_TYPE_COMBO
- * f) Unused pointer
+ * f) Setting tooltip
  */
 static const RemminaProtocolSetting remmina_plugin_webkit_advanced_settings[] =
 {
@@ -216,12 +249,12 @@ static RemminaProtocolPlugin remmina_plugin =
   NULL,                                         // Query for available features
   NULL,                                         // Call a feature
   NULL,                                         // Send a keystroke
-  NULL                                          // Capture screenshot
+  NULL                                          // Screenshot support
 };
 
 G_MODULE_EXPORT gboolean remmina_plugin_entry(RemminaPluginService *service)
 {
-  TRACE_CALL("remmina-plugin-webkit::remmina_plugin_entry");
+  TRACE_CALL(__func__);
   remmina_plugin_service = service;
 
   if (!service->register_plugin((RemminaPlugin *) &remmina_plugin))
