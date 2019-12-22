@@ -212,8 +212,10 @@ int parse_arguments(int argc, char* argv[])
       else if (isprint(optopt))
         fprintf (stderr, "Unknown option '-%c'.\n", optopt);
       else
+      {
         fprintf (stderr, "Unknown option character '\\x%x'.\n", optopt);
         return 1;
+      }
     default:
       return 1;
   }
