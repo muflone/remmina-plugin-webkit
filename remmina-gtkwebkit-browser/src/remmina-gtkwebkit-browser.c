@@ -21,9 +21,7 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
-#if GTK_VERSION == 3
-  #include <gtk/gtkx.h>
-#endif
+#include <gtk/gtkx.h>
 #include <webkit/webkit.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -117,11 +115,7 @@ static GtkWidget* create_toolbar()
   GtkWidget* toolbar;
 
   toolbar = gtk_toolbar_new();
-  #if GTK_VERSION == 3
   gtk_orientable_set_orientation(GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_HORIZONTAL);
-  #else
-  gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
-  #endif
   gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_BOTH_HORIZ);
 
   /* Back button */
@@ -151,11 +145,7 @@ static GtkWidget* create_toolbar()
     {
       /* Disable activation when the go button has been disabled */
       g_signal_connect(G_OBJECT(uri_entry), "activate", G_CALLBACK(activate_uri_entry_cb), NULL);
-      #if GTK_VERSION == 3
       gtk_editable_set_editable(GTK_EDITABLE(uri_entry), FALSE);
-      #else
-      gtk_entry_set_editable(GTK_ENTRY(uri_entry), FALSE);
-      #endif
     }
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
   }
@@ -244,11 +234,7 @@ int main(int argc, char* argv[])
   if (parse_arguments(argc, argv))
     return 1;
 
-  #if GTK_VERSION == 3
   vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  #else
-  vbox = gtk_vbox_new(FALSE, 0);
-  #endif
   if (option_has_toolbar)
     gtk_box_pack_start(GTK_BOX(vbox), create_toolbar(), FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(vbox), create_browser(), TRUE, TRUE, 0);

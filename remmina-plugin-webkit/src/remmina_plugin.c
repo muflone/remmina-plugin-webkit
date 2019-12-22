@@ -21,9 +21,7 @@
 
 #include "plugin_config.h"
 #include <remmina/remmina_plugin.h>
-#if GTK_VERSION == 3
-  # include <gtk/gtkx.h>
-#endif
+#include <gtk/gtkx.h>
 
 typedef struct _RemminaPluginData
 {
